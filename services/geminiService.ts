@@ -548,7 +548,15 @@ export const fetchImageFromInternet = async (prompt: string, retries = 3, delay 
 
 // --- New Deepgram TTS Integration ---
 
-const DEEPGRAM_API_KEY = '4745f29f4e8841613fb92990f25bdbeac3b9b950';
+// Get Deepgram API key from environment variables
+const getDeepgramApiKey = () => {
+  const apiKey = (typeof process !== 'undefined' && process.env && (process.env.DEEPGRAM_API_KEY || process.env.VITE_DEEPGRAM_API_KEY)) || (globalThis as any).DEEPGRAM_API_KEY;
+  if (!apiKey) {
+    throw new Error('Missing Deepgram API key. Set DEEPGRAM_API_KEY in your environment.');
+  }
+  return apiKey;
+};
+
 const DEEPGRAM_API_URL = 'https://api.deepgram.com/v1/speak?model=aura-asteria-en';
 
 /**
@@ -562,7 +570,7 @@ export const getTextToSpeechAudio = async (text: string, retries = 3, delay = 50
     const response = await fetch(DEEPGRAM_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Token ${DEEPGRAM_API_KEY}`,
+        'Authorization': `Token ${getDeepgramApiKey()}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ text })
