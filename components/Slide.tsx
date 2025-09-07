@@ -79,7 +79,12 @@ const AnimatedText: React.FC<{ text: string; className?: string }> = ({ text, cl
       opacity: 1,
       y: 0,
       filter: 'blur(0px)',
-      transition: { type: 'spring', damping: 15, stiffness: 300 },
+      transition: { 
+        type: 'spring', 
+        damping: 15, 
+        stiffness: 300,
+        filter: { type: 'tween', duration: 0.3 }
+      },
     },
   };
 
@@ -382,7 +387,7 @@ const Slide: React.FC<SlideProps> = ({ slide, template }) => {
   const { style, id } = template;
   const { title, content, layout, image_prompt, subtitle, keyPoints, examples, statistics } = slide;
 
-  const baseClasses = `w-full h-full flex p-8 md:p-12 ${style.backgroundClasses} ${style.fontFamily} relative overflow-hidden pattern-grid`;
+  const baseClasses = `w-full h-full flex p-8 md:p-12 ${style.backgroundClasses} ${style.fontFamily} relative overflow-hidden`;
   const titleClasses = `font-bold ${style.headingColor} text-readable-strong`;
   const contentClasses = `prose dark:prose-invert max-w-none ${style.textColor} text-readable`;
   const accentBg = style.accentColor.replace('text-','bg-');

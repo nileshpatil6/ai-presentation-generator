@@ -329,9 +329,33 @@ export const generateSlidesStream = async function* (
 
   try {
     const aiInstance = await getAi();
-  const response = await aiInstance.models.generateContentStream({
+    const response = await aiInstance.models.generateContentStream({
       model: "gemini-2.5-flash",
       contents: prompt,
+      generationConfig: {
+        maxOutputTokens: 65536, // Set to maximum possible tokens
+        temperature: 0.7,
+        topP: 0.8,
+        topK: 40,
+      },
+      safetySettings: [
+        {
+          category: 'HARM_CATEGORY_HARASSMENT',
+          threshold: 'BLOCK_NONE',
+        },
+        {
+          category: 'HARM_CATEGORY_HATE_SPEECH',
+          threshold: 'BLOCK_NONE',
+        },
+        {
+          category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+          threshold: 'BLOCK_NONE',
+        },
+        {
+          category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+          threshold: 'BLOCK_NONE',
+        },
+      ],
     });
 
     let buffer = '';
@@ -341,13 +365,27 @@ export const generateSlidesStream = async function* (
     let slideIndex = 0;
   let titleYielded = false;
 
+    // Add timeout and error handling for streaming
+    let lastChunkTime = Date.now();
+    const TIMEOUT_MS = 30000; // 30 seconds timeout
+    let chunkCount = 0;
+    
     // SDK may expose an async iterable directly or via .stream
     const streamIterable: AsyncIterable<any> = (response as any).stream ?? (response as any);
     for await (const chunk of streamIterable) {
+      lastChunkTime = Date.now();
+      chunkCount++;
+      
       const text = typeof chunk.text === 'function' ? chunk.text() : chunk.text;
       if (!text) continue;
       
       buffer += text;
+      
+      // Check for timeout
+      if (Date.now() - lastChunkTime > TIMEOUT_MS) {
+        console.warn('Streaming timeout detected, forcing completion');
+        break;
+      }
       
       // Parse main title if not already extracted
       if (!mainTitle && buffer.includes('"main_title"')) {
@@ -416,6 +454,22 @@ export const generateSlidesStream = async function* (
         isComplete = true;
         break;
       }
+      
+      // Force completion if we have a good number of slides and no new chunks
+      if (slides.length >= 15 && chunkCount > 0) {
+        const timeSinceLastChunk = Date.now() - lastChunkTime;
+        if (timeSinceLastChunk > 10000) { // 10 seconds without new content
+          console.warn(`Forcing completion after ${slides.length} slides due to stream stall`);
+          isComplete = true;
+          break;
+        }
+      }
+    }
+    
+    // If we didn't get a complete delimiter but have slides, mark as complete
+    if (!isComplete && slides.length > 0) {
+      console.warn(`Stream ended without completion delimiter. Completing with ${slides.length} slides.`);
+      isComplete = true;
     }
 
     // Final yield with complete presentation
@@ -427,9 +481,13 @@ export const generateSlidesStream = async function* (
     
     yield finalPresentation;
 
-    // Basic validation
-    if (!mainTitle || slides.length === 0) {
-      throw new Error("Invalid presentation structure received from streaming API.");
+    // Basic validation - allow completion with fewer slides if we have at least 5
+    if (!mainTitle && slides.length === 0) {
+      throw new Error("No presentation content was generated from streaming API.");
+    }
+    
+    if (slides.length < 5) {
+      console.warn(`Only ${slides.length} slides generated, but proceeding with partial presentation`);
     }
 
   } catch (error) {

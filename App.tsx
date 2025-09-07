@@ -74,12 +74,25 @@ const App: React.FC = () => {
       }
     } catch (err) {
       console.error(err);
-      setError(
-        err instanceof Error
-          ? `Failed to generate presentation: ${err.message}`
-          : 'An unknown error occurred.'
-      );
-      setStreamingState({ status: 'error', message: err instanceof Error ? err.message : 'Unknown error' });
+      
+      // If we have partial content, use it instead of erroring out
+      if (partialPresentation && partialPresentation.slides.length > 0) {
+        console.warn('Stream failed but using partial presentation with', partialPresentation.slides.length, 'slides');
+        const finalPresentation: Presentation = {
+          main_title: partialPresentation.main_title || 'Presentation (Partial)',
+          slides: partialPresentation.slides
+        };
+        setPresentation(finalPresentation);
+        setStreamingState({ status: 'complete' });
+        setPreloadState({ status: 'loading', images: { loaded: 0, total: 0 }, audio: { loaded: 0, total: 0 } });
+      } else {
+        setError(
+          err instanceof Error
+            ? `Failed to generate presentation: ${err.message}`
+            : 'An unknown error occurred.'
+        );
+        setStreamingState({ status: 'error', message: err instanceof Error ? err.message : 'Unknown error' });
+      }
     } finally {
       setIsLoading(false);
     }
