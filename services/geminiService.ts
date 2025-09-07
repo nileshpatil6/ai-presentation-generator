@@ -8,9 +8,9 @@ async function getAi() {
   if (!ai) {
     // Dynamically import the library only when needed.
     const { GoogleGenAI } = await import("@google/genai");
-    const apiKey = (typeof process !== 'undefined' && process.env && (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.API_KEY)) || (globalThis as any).GEMINI_API_KEY;
+    const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (globalThis as any).GEMINI_API_KEY;
     if (!apiKey) {
-      throw new Error('Missing Gemini API key. Set GEMINI_API_KEY in your environment.');
+      throw new Error('Missing Gemini API key. Set VITE_GEMINI_API_KEY in your environment.');
     }
     ai = new GoogleGenAI({ apiKey });
   }
@@ -550,9 +550,9 @@ export const fetchImageFromInternet = async (prompt: string, retries = 3, delay 
 
 // Get Deepgram API key from environment variables
 const getDeepgramApiKey = () => {
-  const apiKey = (typeof process !== 'undefined' && process.env && (process.env.DEEPGRAM_API_KEY || process.env.VITE_DEEPGRAM_API_KEY)) || (globalThis as any).DEEPGRAM_API_KEY;
+  const apiKey = (import.meta as any).env?.VITE_DEEPGRAM_API_KEY || (globalThis as any).DEEPGRAM_API_KEY;
   if (!apiKey) {
-    throw new Error('Missing Deepgram API key. Set DEEPGRAM_API_KEY in your environment.');
+    throw new Error('Missing Deepgram API key. Set VITE_DEEPGRAM_API_KEY in your environment.');
   }
   return apiKey;
 };
