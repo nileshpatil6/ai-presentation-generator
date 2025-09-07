@@ -3,6 +3,7 @@ import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { Slide as SlideType, Template } from '../types';
 import { SpinnerIcon } from './icons/Icons';
 import { imageCache } from '../utils/cache';
+import { FloatingShapes, DecorativeLine, TitleAccent, ModernCard, GradientMesh, ModernIcon } from './DesignElements';
 
 // Starfield Particle Component for 'Galactic Midnight' theme
 const Particles: React.FC = () => {
@@ -108,42 +109,111 @@ const AnimatedText: React.FC<{ text: string; className?: string }> = ({ text, cl
 const ContentRenderer: React.FC<{ content: string, className: string }> = ({ content, className }) => {
   const renderWithInlineFormatting = (text: string): React.ReactNode => {
     if (!text) return null;
-    const parts = text.split(/(\*\*.*?\*\*)/g);
+    
+    // Handle bold (**text**), italic (*text*), and inline code (`code`)
+    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
     return parts.filter(part => part).map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index}>{part.substring(2, part.length - 2)}</strong>;
+        return <strong key={index} className="font-bold">{part.substring(2, part.length - 2)}</strong>;
+      }
+      if (part.startsWith('*') && part.endsWith('*') && !part.startsWith('**')) {
+        return <em key={index} className="italic">{part.substring(1, part.length - 1)}</em>;
+      }
+      if (part.startsWith('`') && part.endsWith('`')) {
+        return <code key={index} className="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-sm font-mono">{part.substring(1, part.length - 1)}</code>;
       }
       return part;
     });
   };
 
   const elements = content.split('\n').map((line, i) => {
-    if (line.startsWith('- ')) {
-      return <li key={i} className="mb-3 leading-relaxed">{renderWithInlineFormatting(line.substring(2))}</li>;
+    const trimmedLine = line.trim();
+    
+    // Handle headers (# ## ###)
+    if (trimmedLine.startsWith('### ')) {
+      return <h3 key={i} className="text-sm md:text-base font-bold mb-1 mt-2 break-words">{renderWithInlineFormatting(trimmedLine.substring(4))}</h3>;
     }
-    if (line.trim() === '') {
-        return null;
+    if (trimmedLine.startsWith('## ')) {
+      return <h2 key={i} className="text-base md:text-lg font-bold mb-2 mt-3 break-words">{renderWithInlineFormatting(trimmedLine.substring(3))}</h2>;
     }
-    return <p key={i} className="mb-4 leading-relaxed">{renderWithInlineFormatting(line)}</p>;
+    if (trimmedLine.startsWith('# ')) {
+      return <h1 key={i} className="text-lg md:text-xl font-bold mb-2 mt-3 break-words">{renderWithInlineFormatting(trimmedLine.substring(2))}</h1>;
+    }
+    
+    // Handle numbered lists (1. 2. 3.)
+    if (/^\d+\.\s/.test(trimmedLine)) {
+      const content = trimmedLine.replace(/^\d+\.\s/, '');
+      return <li key={i} className="mb-1 leading-snug break-words" data-list-type="ordered">{renderWithInlineFormatting(content)}</li>;
+    }
+    
+    // Handle bullet lists (- * +)
+    if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ') || trimmedLine.startsWith('+ ')) {
+      const content = trimmedLine.substring(2);
+      return <li key={i} className="mb-1 leading-snug break-words" data-list-type="unordered">{renderWithInlineFormatting(content)}</li>;
+    }
+    
+    // Handle blockquotes (>)
+    if (trimmedLine.startsWith('> ')) {
+      return <blockquote key={i} className="border-l-3 border-gray-400 pl-3 italic mb-2 text-gray-600 dark:text-gray-400 break-words text-sm">{renderWithInlineFormatting(trimmedLine.substring(2))}</blockquote>;
+    }
+    
+    // Handle horizontal rules (---)
+    if (trimmedLine === '---' || trimmedLine === '***') {
+      return <hr key={i} className="my-2 border-gray-300 dark:border-gray-600" />;
+    }
+    
+    // Handle empty lines
+    if (trimmedLine === '') {
+      return null;
+    }
+    
+    // Regular paragraphs
+    return <p key={i} className="mb-2 leading-snug break-words">{renderWithInlineFormatting(line)}</p>;
   }).filter(Boolean);
 
   const groupedElements: React.ReactNode[] = [];
-  let currentListItems: React.ReactElement[] = [];
+  let currentOrderedItems: React.ReactElement[] = [];
+  let currentUnorderedItems: React.ReactElement[] = [];
 
   elements.forEach((element) => {
     if (React.isValidElement(element) && element.type === 'li') {
-      currentListItems.push(element);
+      const listType = element.props['data-list-type'];
+      
+      if (listType === 'ordered') {
+        // Close any open unordered list
+        if (currentUnorderedItems.length > 0) {
+          groupedElements.push(<ul key={`ul-${groupedElements.length}`} className="list-disc list-inside pl-3 space-y-1 mb-2 break-words">{currentUnorderedItems}</ul>);
+          currentUnorderedItems = [];
+        }
+        currentOrderedItems.push(element);
+      } else {
+        // Close any open ordered list
+        if (currentOrderedItems.length > 0) {
+          groupedElements.push(<ol key={`ol-${groupedElements.length}`} className="list-decimal list-inside pl-3 space-y-1 mb-2 break-words">{currentOrderedItems}</ol>);
+          currentOrderedItems = [];
+        }
+        currentUnorderedItems.push(element);
+      }
     } else {
-      if (currentListItems.length > 0) {
-        groupedElements.push(<ul key={`ul-${groupedElements.length}`} className="list-disc list-inside pl-4 space-y-3">{currentListItems}</ul>);
-        currentListItems = [];
+      // Close any open lists
+      if (currentOrderedItems.length > 0) {
+        groupedElements.push(<ol key={`ol-${groupedElements.length}`} className="list-decimal list-inside pl-3 space-y-1 mb-2 break-words">{currentOrderedItems}</ol>);
+        currentOrderedItems = [];
+      }
+      if (currentUnorderedItems.length > 0) {
+        groupedElements.push(<ul key={`ul-${groupedElements.length}`} className="list-disc list-inside pl-3 space-y-1 mb-2 break-words">{currentUnorderedItems}</ul>);
+        currentUnorderedItems = [];
       }
       groupedElements.push(element);
     }
   });
 
-  if (currentListItems.length > 0) {
-    groupedElements.push(<ul key={`ul-${groupedElements.length}`} className="list-disc list-inside pl-4 space-y-3">{currentListItems}</ul>);
+  // Close any remaining open lists
+  if (currentOrderedItems.length > 0) {
+    groupedElements.push(<ol key={`ol-${groupedElements.length}`} className="list-decimal list-inside pl-3 space-y-1 mb-2 break-words">{currentOrderedItems}</ol>);
+  }
+  if (currentUnorderedItems.length > 0) {
+    groupedElements.push(<ul key={`ul-${groupedElements.length}`} className="list-disc list-inside pl-3 space-y-1 mb-2 break-words">{currentUnorderedItems}</ul>);
   }
 
   const lineVariants: Variants = {
@@ -156,12 +226,14 @@ const ContentRenderer: React.FC<{ content: string, className: string }> = ({ con
   };
 
   return (
-    <div className={className}>
-      {groupedElements.map((el, i) => (
-        <motion.div key={i} custom={i} initial="hidden" animate="visible" variants={lineVariants}>
-          {el}
-        </motion.div>
-      ))}
+    <div className={`${className} overflow-hidden`}>
+      <div className="max-h-full overflow-y-auto pr-2 -mr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+        {groupedElements.map((el, i) => (
+          <motion.div key={i} custom={i} initial="hidden" animate="visible" variants={lineVariants}>
+            {el}
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -310,7 +382,7 @@ const Slide: React.FC<SlideProps> = ({ slide, template }) => {
   const { style, id } = template;
   const { title, content, layout, image_prompt, subtitle, keyPoints, examples, statistics } = slide;
 
-  const baseClasses = `w-full h-full flex p-8 md:p-12 ${style.backgroundClasses} ${style.fontFamily} relative overflow-hidden`;
+  const baseClasses = `w-full h-full flex p-8 md:p-12 ${style.backgroundClasses} ${style.fontFamily} relative overflow-hidden pattern-grid`;
   const titleClasses = `font-bold ${style.headingColor} text-readable-strong`;
   const contentClasses = `prose dark:prose-invert max-w-none ${style.textColor} text-readable`;
   const accentBg = style.accentColor.replace('text-','bg-');
@@ -321,51 +393,81 @@ const Slide: React.FC<SlideProps> = ({ slide, template }) => {
     switch (layout) {
       case 'title_only':
         return (
-          <div className="flex flex-col justify-center items-center text-center w-full z-10">
+          <div className="flex flex-col justify-center items-center text-center w-full z-10 relative">
+            <FloatingShapes templateId={id} />
+            <GradientMesh variant="mesh" />
+            
+            {/* Modern geometric accents */}
             <motion.div 
-                className={`absolute -top-1/4 -right-1/4 w-3/4 h-3/4 ${secondaryAccentBg || accentBg} rounded-full`}
-                initial={{ opacity: 0, scale: 0.5, x: '50%', y: '-50%' }}
-                animate={{ opacity: 0.1, scale: 1, x: 0, y: 0 }}
-                transition={{ delay: 0.2, duration: 1.2, ease: 'easeOut' }}
-            ></motion.div>
+                className={`absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br ${style.accentColor.replace('text-', '')} opacity-20 shape-blob`}
+                initial={{ opacity: 0, scale: 0.5, rotate: -45 }}
+                animate={{ opacity: 0.2, scale: 1, rotate: 0 }}
+                transition={{ delay: 0.2, duration: 1.5, ease: 'easeOut' }}
+            />
             <motion.div 
-                className={`absolute -bottom-1/4 -left-1/4 w-3/4 h-3/4 ${accentBg} rounded-full`}
-                initial={{ opacity: 0, scale: 0.5, x: '-50%', y: '50%' }}
-                animate={{ opacity: 0.1, scale: 1, x: 0, y: 0 }}
-                transition={{ delay: 0.2, duration: 1.2, ease: 'easeOut' }}
-            ></motion.div>
-            <AnimatedText text={title} className={`${titleClasses} text-4xl md:text-6xl lg:text-7xl font-black tracking-tight break-words text-center`} />
-            <motion.div 
-                className={`w-28 h-2 ${accentBg} my-10 rounded-full`}
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ delay: 0.5, duration: 0.7, ease: 'easeOut' }}
-            ></motion.div>
-            {content && <AnimatedText text={content} className={`${contentClasses} text-xl md:text-2xl opacity-80 max-w-4xl`} />}
+                className={`absolute -bottom-20 -left-20 w-32 h-32 bg-gradient-to-tr ${style.accentColor.replace('text-', '')} opacity-15 shape-circle`}
+                initial={{ opacity: 0, scale: 0.3, rotate: 45 }}
+                animate={{ opacity: 0.15, scale: 1, rotate: 0 }}
+                transition={{ delay: 0.4, duration: 1.2, ease: 'easeOut' }}
+            />
+            
+            <div className="relative z-10">
+              <div className="relative">
+                <AnimatedText text={title} className={`${titleClasses} text-4xl md:text-6xl lg:text-7xl font-black tracking-tight break-words text-center relative`} />
+                <TitleAccent color={accentBg} side="left" />
+              </div>
+              
+              <DecorativeLine 
+                color={`bg-gradient-to-r ${style.accentColor.replace('text-', 'from-')} to-purple-600`}
+                className="w-32 mx-auto my-8"
+              />
+              
+              {content && (
+                <ModernCard className="max-w-4xl mx-auto p-6 mt-8" variant="glass">
+                  <AnimatedText text={content} className={`${contentClasses} text-xl md:text-2xl opacity-90`} />
+                </ModernCard>
+              )}
+            </div>
           </div>
         );
       case 'title_content':
         return (
-          <div className="flex flex-col justify-center items-start w-full z-10 max-w-7xl mx-auto">
-             <div className="w-full mb-10">
+          <div className="flex flex-col justify-center items-start w-full z-10 max-w-7xl mx-auto relative">
+            <GradientMesh variant="aurora" />
+            
+            {/* Subtle decorative shapes */}
+            <motion.div 
+                className={`absolute top-0 right-0 w-24 h-24 ${accentBg} opacity-10 shape-organic`}
+                initial={{ scale: 0, rotate: -90 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.5, duration: 1 }}
+            />
+            
+            <div className="w-full mb-10 relative z-10">
+              <div className="relative">
                 <AnimatedText text={title} className={`${titleClasses} text-3xl md:text-4xl lg:text-5xl font-extrabold break-words`} />
-                <motion.div 
-                    className={`h-3 w-1/4 ${accentBg} rounded-full mt-4`}
-                    initial={{ scaleX: 0, originX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }}
-                ></motion.div>
-             </div>
-            <div className="bg-readable rounded-lg p-6">
-              <ContentRenderer content={content} className={`${contentClasses} text-xl md:text-2xl w-full prose-lg`} />
+                <TitleAccent color={accentBg} side="left" />
+              </div>
+              <DecorativeLine 
+                color={`bg-gradient-to-r ${style.accentColor.replace('text-', 'from-')} via-purple-500 to-pink-500`}
+                className="w-1/3 mt-4"
+              />
             </div>
+            
+            <ModernCard className="w-full flex-1 min-h-0" variant="modern" glowColor="shadow-soft">
+              <div className="p-6 h-full flex flex-col">
+                <div className="flex-1 overflow-y-auto max-h-[60vh]">
+                  <ContentRenderer content={content} className={`${contentClasses} text-lg md:text-xl w-full`} />
+                </div>
+              </div>
+            </ModernCard>
           </div>
         );
       case 'content_only':
          return (
-          <div className="flex flex-col justify-center items-center w-full z-10">
-             <div className="bg-readable rounded-lg p-6 max-w-5xl">
-               <ContentRenderer content={content} className={`${contentClasses} text-2xl md:text-3xl w-full text-center`} />
+          <div className="flex flex-col justify-center items-center w-full h-full z-10">
+             <div className="bg-readable rounded-lg p-6 max-w-5xl max-h-[80vh] overflow-y-auto">
+               <ContentRenderer content={content} className={`${contentClasses} text-xl md:text-2xl w-full text-center`} />
              </div>
           </div>
         );
@@ -375,12 +477,12 @@ const Slide: React.FC<SlideProps> = ({ slide, template }) => {
                 <div className="w-full h-64 md:h-80 lg:h-96 order-first">
                   {image_prompt ? <GeneratedImage prompt={image_prompt} /> : <NoImagePlaceholder />}
                 </div>
-                <div className="flex flex-col justify-center h-full overflow-auto px-2 md:px-4">
-                    <div className="bg-readable rounded-lg p-4 md:p-6">
-                      <AnimatedText text={title} className={`${titleClasses} text-2xl md:text-3xl lg:text-4xl font-bold mb-4 break-words`} />
-                      {subtitle && <p className={`${contentClasses} text-base md:text-lg mb-4 opacity-80`}>{subtitle}</p>}
-                      <div className="overflow-auto">
-                          <ContentRenderer content={content} className={`${contentClasses} text-sm md:text-base lg:text-lg leading-relaxed`} />
+                <div className="flex flex-col justify-center h-full min-h-0 px-2 md:px-4">
+                    <div className="bg-readable rounded-lg p-4 md:p-6 flex flex-col h-full min-h-0">
+                      <AnimatedText text={title} className={`${titleClasses} text-xl md:text-2xl lg:text-3xl font-bold mb-3 break-words`} />
+                      {subtitle && <p className={`${contentClasses} text-sm md:text-base mb-3 opacity-80`}>{subtitle}</p>}
+                      <div className="flex-1 overflow-y-auto max-h-[50vh]">
+                          <ContentRenderer content={content} className={`${contentClasses} text-sm md:text-base leading-relaxed`} />
                       </div>
                     </div>
                 </div>
@@ -389,12 +491,12 @@ const Slide: React.FC<SlideProps> = ({ slide, template }) => {
       case 'image_right':
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center w-full h-full z-10 max-w-7xl mx-auto">
-                <div className="flex flex-col justify-center h-full overflow-auto px-2 md:px-4 order-last md:order-first">
-                    <div className="bg-readable rounded-lg p-4 md:p-6">
-                      <AnimatedText text={title} className={`${titleClasses} text-2xl md:text-3xl lg:text-4xl font-bold mb-4 break-words`} />
-                      {subtitle && <p className={`${contentClasses} text-base md:text-lg mb-4 opacity-80`}>{subtitle}</p>}
-                      <div className="overflow-auto">
-                          <ContentRenderer content={content} className={`${contentClasses} text-sm md:text-base lg:text-lg leading-relaxed`} />
+                <div className="flex flex-col justify-center h-full min-h-0 px-2 md:px-4 order-last md:order-first">
+                    <div className="bg-readable rounded-lg p-4 md:p-6 flex flex-col h-full min-h-0">
+                      <AnimatedText text={title} className={`${titleClasses} text-xl md:text-2xl lg:text-3xl font-bold mb-3 break-words`} />
+                      {subtitle && <p className={`${contentClasses} text-sm md:text-base mb-3 opacity-80`}>{subtitle}</p>}
+                      <div className="flex-1 overflow-y-auto max-h-[50vh]">
+                          <ContentRenderer content={content} className={`${contentClasses} text-sm md:text-base leading-relaxed`} />
                       </div>
                     </div>
                 </div>
@@ -431,31 +533,31 @@ const Slide: React.FC<SlideProps> = ({ slide, template }) => {
         
         return (
           <div className="flex flex-col justify-center w-full z-10 max-w-6xl mx-auto h-full">
-            <div className="flex-shrink-0 mb-6">
-              <AnimatedText text={title} className={`${titleClasses} text-2xl md:text-3xl lg:text-4xl font-bold text-center break-words`} />
-              {subtitle && <p className={`${contentClasses} text-base md:text-lg text-center mt-2 opacity-80`}>{subtitle}</p>}
+            <div className="flex-shrink-0 mb-4">
+              <AnimatedText text={title} className={`${titleClasses} text-xl md:text-2xl lg:text-3xl font-bold text-center break-words`} />
+              {subtitle && <p className={`${contentClasses} text-sm md:text-base text-center mt-2 opacity-80`}>{subtitle}</p>}
             </div>
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 min-h-0">
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 min-h-0 max-h-[70vh]">
               <motion.div 
                 initial={{ opacity: 0, x: -30 }} 
                 animate={{ opacity: 1, x: 0 }} 
                 transition={{ delay: 0.3 }}
-                className={`p-4 md:p-6 rounded-xl bg-white border-2 border-green-300 overflow-hidden flex flex-col shadow-lg`}
+                className={`p-3 md:p-4 rounded-xl bg-white border-2 border-green-300 overflow-hidden flex flex-col shadow-lg min-h-0`}
               >
-                <h3 className={`text-green-800 text-readable-strong font-bold text-lg mb-3`}>Pros / Benefits</h3>
-                <div className="flex-1 overflow-auto">
-                  <ContentRenderer content={leftContent} className={`text-gray-900 text-readable prose prose-sm max-w-none text-sm md:text-base leading-relaxed`} />
+                <h3 className={`text-green-800 text-readable-strong font-bold text-base mb-2`}>Pros / Benefits</h3>
+                <div className="flex-1 overflow-y-auto max-h-[50vh]">
+                  <ContentRenderer content={leftContent} className={`text-gray-900 text-readable max-w-none text-xs md:text-sm leading-relaxed`} />
                 </div>
               </motion.div>
               <motion.div 
                 initial={{ opacity: 0, x: 30 }} 
                 animate={{ opacity: 1, x: 0 }} 
                 transition={{ delay: 0.5 }}
-                className={`p-4 md:p-6 rounded-xl bg-white border-2 border-red-300 overflow-hidden flex flex-col shadow-lg`}
+                className={`p-3 md:p-4 rounded-xl bg-white border-2 border-red-300 overflow-hidden flex flex-col shadow-lg min-h-0`}
               >
-                <h3 className={`text-red-800 text-readable-strong font-bold text-lg mb-3`}>Cons / Challenges</h3>
-                <div className="flex-1 overflow-auto">
-                  <ContentRenderer content={rightContent} className={`text-gray-900 text-readable prose prose-sm max-w-none text-sm md:text-base leading-relaxed`} />
+                <h3 className={`text-red-800 text-readable-strong font-bold text-base mb-2`}>Cons / Challenges</h3>
+                <div className="flex-1 overflow-y-auto max-h-[50vh]">
+                  <ContentRenderer content={rightContent} className={`text-gray-900 text-readable max-w-none text-xs md:text-sm leading-relaxed`} />
                 </div>
               </motion.div>
             </div>
@@ -636,17 +738,28 @@ const Slide: React.FC<SlideProps> = ({ slide, template }) => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 + index * 0.1 }}
-                    className="p-4 md:p-5 rounded-xl bg-white border-2 border-indigo-300 shadow-lg flex flex-col h-full"
+                    className="relative overflow-hidden"
                   >
-                    <div className="flex items-center mb-3">
-                      <div className={`w-8 h-8 ${accentBg} rounded-full flex items-center justify-center mr-3 flex-shrink-0`}>
-                        <span className="text-white text-sm font-bold">💡</span>
+                    <ModernCard className="p-5 md:p-6 h-full flex flex-col" variant="glass" glowColor="shadow-depth">
+                      <div className="flex items-center mb-4">
+                        <ModernIcon 
+                          icon="💡" 
+                          color="bg-gradient-to-br from-indigo-500 to-purple-600" 
+                          size="md"
+                        />
+                        <div className="ml-3 flex-1">
+                          <h3 className="text-indigo-800 text-readable-strong font-bold text-sm">Example {index + 1}</h3>
+                          <DecorativeLine color="bg-gradient-to-r from-indigo-400 to-purple-500" className="w-12 h-0.5 mt-1" />
+                        </div>
                       </div>
-                      <h3 className="text-indigo-800 text-readable-strong font-bold text-sm">Example {index + 1}</h3>
-                    </div>
-                    <div className="flex-1">
-                      <ContentRenderer content={typeof example === 'string' ? example : example.toString()} className={`text-gray-900 text-readable prose prose-sm max-w-none text-xs md:text-sm leading-relaxed`} />
-                    </div>
+                      
+                      {/* Subtle shape accent */}
+                      <div className={`absolute -top-2 -right-2 w-8 h-8 ${accentBg} opacity-10 shape-circle`} />
+                      
+                      <div className="flex-1 relative z-10">
+                        <ContentRenderer content={typeof example === 'string' ? example : example.toString()} className={`text-gray-900 text-readable prose prose-sm max-w-none text-xs md:text-sm leading-relaxed`} />
+                      </div>
+                    </ModernCard>
                   </motion.div>
                 ))}
               </div>
@@ -675,15 +788,28 @@ const Slide: React.FC<SlideProps> = ({ slide, template }) => {
                     initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 + index * 0.1 }}
-                    className="p-5 md:p-6 rounded-xl bg-white border-2 border-emerald-300 shadow-lg"
+                    className="relative overflow-hidden"
                   >
-                    <div className="flex items-center mb-4">
-                      <div className={`w-10 h-10 ${accentBg} rounded-full flex items-center justify-center mr-3`}>
-                        <span className="text-white text-lg">🎯</span>
+                    <ModernCard className="p-6 md:p-7 h-full" variant="modern" glowColor="shadow-depth">
+                      <div className="flex items-center mb-5">
+                        <ModernIcon 
+                          icon="🎯" 
+                          color="bg-gradient-to-br from-emerald-500 to-teal-600" 
+                          size="lg"
+                        />
+                        <div className="ml-4 flex-1">
+                          <h3 className="text-emerald-800 text-readable-strong font-bold text-base">Use Case {index + 1}</h3>
+                          <DecorativeLine color="bg-gradient-to-r from-emerald-400 to-teal-500" className="w-16 h-0.5 mt-2" />
+                        </div>
                       </div>
-                      <h3 className="text-emerald-800 text-readable-strong font-bold text-base">Use Case {index + 1}</h3>
-                    </div>
-                    <ContentRenderer content={typeof useCase === 'string' ? useCase : useCase.toString()} className={`text-gray-900 text-readable prose prose-sm max-w-none text-sm md:text-base leading-relaxed`} />
+                      
+                      {/* Modern geometric accent */}
+                      <div className={`absolute -bottom-3 -right-3 w-12 h-12 ${accentBg} opacity-10 shape-blob`} />
+                      
+                      <div className="relative z-10">
+                        <ContentRenderer content={typeof useCase === 'string' ? useCase : useCase.toString()} className={`text-gray-900 text-readable prose prose-sm max-w-none text-sm md:text-base leading-relaxed`} />
+                      </div>
+                    </ModernCard>
                   </motion.div>
                 ))}
               </div>

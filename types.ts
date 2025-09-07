@@ -40,3 +40,15 @@ export type PreloadState =
       images?: { loaded: number; total: number };
       audio?: { loaded: number; total: number };
     };
+
+export type StreamingState = 
+  | { status: 'idle' }
+  | { status: 'generating'; currentSlide: number; totalExpected?: number }
+  | { status: 'complete' }
+  | { status: 'error'; message: string };
+
+export interface PartialPresentation {
+  main_title?: string;
+  slides: Slide[];
+  isComplete: boolean;
+}

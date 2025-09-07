@@ -4,11 +4,13 @@ import { Presentation, Template } from '../types';
 import Slide from './Slide';
 import { ArrowLeftIcon, ArrowRightIcon, RestartIcon, SlideshowIcon } from './icons/Icons';
 import SpeechControls from './SpeechControls';
+import { ProgressBar } from './DesignElements';
 
 interface PresentationViewerProps {
   presentation: Presentation;
   template: Template;
   onStartOver: () => void;
+  isStreaming?: boolean;
 }
 
 const slideVariants: Variants = {
@@ -35,12 +37,25 @@ const PresentationViewer: React.FC<PresentationViewerProps> = ({
   presentation,
   template,
   onStartOver,
+  isStreaming = false,
 }) => {
   const { slides } = presentation;
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [direction, setDirection] = useState(1);
   const [isAutoplay, setIsAutoplay] = useState(false);
   const [shouldPlayAudio, setShouldPlayAudio] = useState(false);
+
+  // Auto-advance to new slides when streaming
+  useEffect(() => {
+    if (!isStreaming) return;
+    if (slides.length === 0) return; // nothing to advance to yet
+    // Auto-advance only when a brand new slide was appended (not on initial placeholder scenario)
+    const latestSlideIndex = slides.length - 1;
+    if (latestSlideIndex > currentSlide) {
+      setDirection(1);
+      setCurrentSlide(latestSlideIndex);
+    }
+  }, [slides.length, isStreaming, currentSlide]);
 
   const goToNextSlide = () => {
     if (currentSlide < slides.length - 1) {
@@ -90,9 +105,16 @@ const PresentationViewer: React.FC<PresentationViewerProps> = ({
   return (
     <div className="w-full h-screen max-w-6xl mx-auto flex flex-col p-4 md:p-8">
       <header className="flex justify-between items-center mb-4">
-        <h1 className={`text-xl md:text-2xl font-bold ${template.style.headingColor}`}>
-          {presentation.main_title}
-        </h1>
+        <div className="flex-1">
+          <h1 className={`text-xl md:text-2xl font-bold ${template.style.headingColor} mb-2`}>
+            {presentation.main_title}
+          </h1>
+          <ProgressBar 
+            progress={((currentSlide + 1) / slides.length) * 100}
+            color={`bg-gradient-to-r ${template.style.accentColor.replace('text-', 'from-')} to-purple-600`}
+            className="w-48"
+          />
+        </div>
         <button
           onClick={onStartOver}
           className="flex items-center gap-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
@@ -120,19 +142,19 @@ const PresentationViewer: React.FC<PresentationViewerProps> = ({
         </div>
       </div>
       
-      <footer className="flex items-center justify-between mt-4">
+      <footer className="flex items-center justify-between mt-6">
         <button
           onClick={goToPrevSlide}
           disabled={currentSlide === 0}
-          className="p-3 rounded-full bg-white dark:bg-gray-800 shadow-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+          className="p-4 rounded-full bg-white shadow-depth disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-glow hover:scale-105 transition-all duration-200"
         >
           <ArrowLeftIcon />
         </button>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
             <button
               onClick={toggleAutoplay}
-              className={`p-2 rounded-full transition ${isAutoplay ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
+              className={`p-3 rounded-full transition-all duration-200 shadow-depth hover:scale-105 ${isAutoplay ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-glow' : 'bg-white text-gray-700 hover:shadow-glow'}`}
               aria-label={isAutoplay ? "Disable Autoplay" : "Enable Autoplay"}
             >
               <SlideshowIcon className="h-6 w-6" />
@@ -143,15 +165,22 @@ const PresentationViewer: React.FC<PresentationViewerProps> = ({
               startPlaying={shouldPlayAudio}
               onPlaybackChange={() => setShouldPlayAudio(false)}
             />
-            <span className="text-lg font-medium text-gray-700 dark:text-gray-300">
-              {currentSlide + 1} / {slides.length}
-            </span>
+            <div className="bg-white rounded-full px-4 py-2 shadow-depth">
+              <span className="text-lg font-medium text-gray-700">
+                {currentSlide + 1} / {slides.length}
+                {isStreaming && (
+                  <span className="ml-2 text-sm text-blue-600 animate-pulse">
+                    (generating...)
+                  </span>
+                )}
+              </span>
+            </div>
         </div>
 
         <button
           onClick={goToNextSlide}
           disabled={currentSlide === slides.length - 1}
-          className="p-3 rounded-full bg-white dark:bg-gray-800 shadow-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+          className="p-4 rounded-full bg-white shadow-depth disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-glow hover:scale-105 transition-all duration-200"
         >
           <ArrowRightIcon />
         </button>

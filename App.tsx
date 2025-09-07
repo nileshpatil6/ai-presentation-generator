@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Presentation, PreloadState } from './types';
+import { Presentation, PreloadState, StreamingState, PartialPresentation, Slide } from './types';
 import { TEMPLATES } from './constants';
-import { generateSlides, fetchImageFromInternet, getTextToSpeechAudio } from './services/geminiService';
+import { generateSlides, generateSlidesStream, fetchImageFromInternet, getTextToSpeechAudio } from './services/geminiService';
 import TemplateSelector from './components/TemplateSelector';
 import PresentationViewer from './components/PresentationViewer';
 import Preloader from './components/Preloader';
@@ -14,6 +14,8 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [presentation, setPresentation] = useState<Presentation | null>(null);
+  const [partialPresentation, setPartialPresentation] = useState<PartialPresentation | null>(null);
+  const [streamingState, setStreamingState] = useState<StreamingState>({ status: 'idle' });
   
   const [preloadState, setPreloadState] = useState<PreloadState>({ status: 'idle' });
 
@@ -25,14 +27,51 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setPresentation(null);
+    setPartialPresentation(null);
     setPreloadState({ status: 'idle' });
+    setStreamingState({ status: 'generating', currentSlide: 0 });
     imageCache.clear();
     audioCache.clear();
 
     try {
-      const result = await generateSlides(topic);
-      setPresentation(result);
-      setPreloadState({ status: 'loading', images: { loaded: 0, total: 0 }, audio: { loaded: 0, total: 0 } });
+      let slideCount = 0;
+      
+      // Handle slide completion callback for real-time image and audio preloading
+      const handleSlideComplete = async (slide: Slide, slideIndex: number) => {
+        slideCount = slideIndex + 1;
+        setStreamingState({ status: 'generating', currentSlide: slideCount });
+        
+        // Start preloading image and audio for this slide immediately
+        if (slide.image_prompt && slide.image_prompt.trim() !== '' && slide.image_prompt.toLowerCase() !== 'null') {
+          fetchImageFromInternet(slide.image_prompt)
+            .then(url => imageCache.set(slide.image_prompt!, url))
+            .catch(e => console.error(`Failed to preload image for slide ${slideIndex}:`, e));
+        }
+        
+        if (slide.speaker_notes) {
+          getTextToSpeechAudio(slide.speaker_notes)
+            .then(blob => audioCache.set(slide.speaker_notes!, blob))
+            .catch(e => console.error(`Failed to preload audio for slide ${slideIndex}:`, e));
+        }
+      };
+      
+      // Use streaming to generate and display slides as they complete
+      for await (const partialPres of generateSlidesStream(topic, handleSlideComplete)) {
+        setPartialPresentation(partialPres);
+        
+        if (partialPres.isComplete && partialPres.main_title) {
+          // Convert to full presentation when complete
+          const finalPresentation: Presentation = {
+            main_title: partialPres.main_title,
+            slides: partialPres.slides
+          };
+          
+          setPresentation(finalPresentation);
+          setStreamingState({ status: 'complete' });
+          setPreloadState({ status: 'loading', images: { loaded: 0, total: 0 }, audio: { loaded: 0, total: 0 } });
+          break;
+        }
+      }
     } catch (err) {
       console.error(err);
       setError(
@@ -40,6 +79,7 @@ const App: React.FC = () => {
           ? `Failed to generate presentation: ${err.message}`
           : 'An unknown error occurred.'
       );
+      setStreamingState({ status: 'error', message: err instanceof Error ? err.message : 'Unknown error' });
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +105,7 @@ const App: React.FC = () => {
         }));
         
         // Fetch images in parallel
-        const imagePromises = uniqueImagePrompts.map(prompt => 
+        const imagePromises = uniqueImagePrompts.map((prompt: string) => 
           fetchImageFromInternet(prompt)
             .then(url => {
               imageCache.set(prompt, url);
@@ -114,9 +154,11 @@ const App: React.FC = () => {
 
   const handleStartOver = () => {
     setPresentation(null);
+    setPartialPresentation(null);
     setTopic('');
     setError(null);
     setPreloadState({ status: 'idle' });
+    setStreamingState({ status: 'idle' });
     imageCache.clear();
     audioCache.clear();
   };
@@ -124,6 +166,44 @@ const App: React.FC = () => {
   const selectedTemplate = TEMPLATES.find(t => t.id === selectedTemplateId) || TEMPLATES[0];
   
   const renderContent = () => {
+    // Show streaming presentation viewer as soon as we have any partial data (even 0 slides after title)
+    if (partialPresentation) {
+      const tempPresentation: Presentation = {
+        main_title: partialPresentation.main_title || 'Generating...',
+        // Ensure at least one placeholder slide exists so viewer layout renders
+        slides: partialPresentation.slides.length > 0 ? partialPresentation.slides : [{
+          title: 'Preparing first slide...',
+          content: 'AI is assembling your first slide content. This will appear momentarily.',
+          layout: 'title_content',
+          image_prompt: '',
+          speaker_notes: 'The system is generating detailed speaker notes. They will display once ready.'
+        }]
+      } as Presentation;
+
+      return (
+        <div className="w-full">
+          <div className="text-center mb-4">
+            {!partialPresentation.isComplete && (
+              <div className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-4 py-2 rounded-lg inline-flex items-center gap-2">
+                <LoadingIcon />
+                <span>
+                  {partialPresentation.slides.length === 0
+                    ? 'Initializing stream...'
+                    : `Live generating: ${partialPresentation.slides.length} slide${partialPresentation.slides.length>1?'s':''}`}
+                </span>
+              </div>
+            )}
+          </div>
+          <PresentationViewer
+            presentation={tempPresentation}
+            template={selectedTemplate}
+            onStartOver={handleStartOver}
+            isStreaming={!partialPresentation.isComplete}
+          />
+        </div>
+      );
+    }
+    
     if (preloadState.status === 'loading') {
         return <Preloader state={preloadState} />;
     }

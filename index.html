@@ -16,14 +16,39 @@
         height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #f1f1f1;
+        background: transparent;
       }
       ::-webkit-scrollbar-thumb {
-        background: #888;
+        background: rgba(156, 163, 175, 0.5);
         border-radius: 4px;
+        border: 1px solid transparent;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #555;
+        background: rgba(107, 114, 128, 0.7);
+      }
+      
+      /* Custom scrollbar classes for Tailwind compatibility */
+      .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+      }
+      .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+      }
+      .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+        background: #4b5563;
+      }
+      .scrollbar-track-transparent::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      
+      /* Dark mode scrollbar support */
+      @media (prefers-color-scheme: dark) {
+        ::-webkit-scrollbar-thumb {
+          background: rgba(75, 85, 99, 0.5);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(55, 65, 81, 0.7);
+        }
       }
       body {
         font-family: 'Inter', sans-serif;
@@ -65,6 +90,35 @@
       
       .animate-float {
         animation: floating 6s ease-in-out infinite;
+      }
+      
+      /* Text overflow prevention and better readability */
+      .break-words {
+        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+      }
+      
+      .text-readable {
+        line-height: 1.6;
+        max-width: 100%;
+      }
+      
+      .text-readable-strong {
+        line-height: 1.5;
+        font-weight: 600;
+      }
+      
+      .bg-readable {
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95);
+      }
+      
+      @media (prefers-color-scheme: dark) {
+        .bg-readable {
+          background: rgba(31, 41, 55, 0.95);
+        }
       }
       
       /* Enhanced slide transitions */
@@ -119,6 +173,151 @@
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
+      }
+      
+      /* Modern Geometric Shapes and Design Elements */
+      .shape-circle {
+        border-radius: 50%;
+      }
+      
+      .shape-blob {
+        border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+      }
+      
+      .shape-rounded {
+        border-radius: 20px;
+      }
+      
+      .shape-organic {
+        border-radius: 40% 60% 30% 70% / 60% 30% 70% 40%;
+      }
+      
+      /* Gradient Overlays */
+      .gradient-mesh {
+        background: 
+          radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+          radial-gradient(circle at 40% 80%, rgba(120, 219, 226, 0.3) 0%, transparent 50%);
+      }
+      
+      .gradient-aurora {
+        background: 
+          linear-gradient(45deg, rgba(120, 119, 198, 0.1) 0%, transparent 70%),
+          linear-gradient(-45deg, rgba(255, 119, 198, 0.1) 0%, transparent 70%);
+      }
+      
+      /* Sophisticated Patterns */
+      .pattern-dots {
+        background-image: radial-gradient(circle, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+        background-size: 20px 20px;
+      }
+      
+      .pattern-grid {
+        background-image: 
+          linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+        background-size: 30px 30px;
+      }
+      
+      .pattern-diagonal {
+        background-image: repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 10px,
+          rgba(0, 0, 0, 0.02) 10px,
+          rgba(0, 0, 0, 0.02) 20px
+        );
+      }
+      
+      /* Modern Card Styles */
+      .card-modern {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 
+          0 8px 32px 0 rgba(31, 38, 135, 0.37),
+          inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+      }
+      
+      .card-glass {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.0) 100%);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+      }
+      
+      /* Enhanced Shadows */
+      .shadow-soft {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      
+      .shadow-depth {
+        box-shadow: 
+          0 1px 3px rgba(0, 0, 0, 0.12),
+          0 1px 2px rgba(0, 0, 0, 0.24),
+          0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      
+      .shadow-glow {
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+      }
+      
+      /* Decorative Elements */
+      .deco-line {
+        position: relative;
+      }
+      
+      .deco-line::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: -20px;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, currentColor, transparent);
+        transform: translateY(-50%);
+        border-radius: 2px;
+      }
+      
+      /* Animated Backgrounds */
+      @keyframes float-shapes {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        33% { transform: translateY(-10px) rotate(120deg); }
+        66% { transform: translateY(5px) rotate(240deg); }
+      }
+      
+      .shape-float {
+        animation: float-shapes 12s ease-in-out infinite;
+      }
+      
+      @keyframes pulse-glow {
+        0%, 100% { opacity: 0.4; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.05); }
+      }
+      
+      .pulse-glow {
+        animation: pulse-glow 3s ease-in-out infinite;
+      }
+      
+      /* Modern Borders */
+      .border-gradient {
+        position: relative;
+        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+        padding: 2px;
+        border-radius: 12px;
+      }
+      
+      .border-gradient > * {
+        background: white;
+        border-radius: 10px;
+      }
+      
+      /* Enhanced Typography */
+      .text-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
     </style>
   <script type="importmap">
