@@ -1,0 +1,105 @@
+import { Template } from './types';
+
+export const TEMPLATES: Template[] = [
+  {
+    id: 'corporate-horizon',
+    name: 'Corporate Horizon',
+    style: {
+      backgroundClasses: 'bg-gradient-to-br from-slate-50 via-blue-50 to-gray-100 animate-gradient-slow',
+      textColor: 'text-slate-900',
+      headingColor: 'text-slate-900',
+      accentColor: 'text-blue-800',
+      fontFamily: 'font-sans',
+      preview: { bg: 'bg-slate-800', accent: 'bg-blue-600', text: 'bg-slate-200' },
+    },
+  },
+  {
+    id: 'galactic-midnight',
+    name: 'Galactic Midnight',
+    style: {
+      backgroundClasses: 'bg-gradient-to-br from-gray-900 via-slate-900 to-black animate-gradient-slow',
+      textColor: 'text-slate-300',
+      headingColor: 'text-white',
+      accentColor: 'text-cyan-400',
+      secondaryAccentColor: 'text-fuchsia-500',
+      fontFamily: 'font-mono',
+      preview: { bg: 'bg-gray-900', accent: 'bg-cyan-400', text: 'bg-slate-400' },
+    },
+  },
+  {
+    id: 'serene-forest',
+    name: 'Serene Forest',
+    style: {
+      backgroundClasses: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-white animate-gradient-slow',
+      textColor: 'text-gray-900',
+      headingColor: 'text-emerald-900',
+      accentColor: 'text-green-800',
+      fontFamily: 'font-serif',
+      preview: { bg: 'bg-emerald-900', accent: 'bg-green-500', text: 'bg-emerald-100' },
+    },
+  },
+  {
+    id: 'crimson-dawn',
+    name: 'Crimson Dawn',
+    style: {
+      backgroundClasses: 'bg-gradient-to-br from-rose-100 via-orange-50 to-amber-100 animate-gradient-slow',
+      textColor: 'text-gray-900',
+      headingColor: 'text-rose-950',
+      accentColor: 'text-orange-700',
+      fontFamily: 'font-sans',
+      preview: { bg: 'bg-rose-900', accent: 'bg-orange-500', text: 'bg-rose-100' },
+    },
+  },
+  {
+    id: 'academic-blue',
+    name: 'Academic Blue',
+    style: {
+      backgroundClasses: 'bg-gradient-to-br from-blue-50 via-indigo-50 to-white animate-gradient-slow',
+      textColor: 'text-gray-900',
+      headingColor: 'text-blue-900',
+      accentColor: 'text-indigo-800',
+      secondaryAccentColor: 'text-blue-700',
+      fontFamily: 'font-serif',
+      preview: { bg: 'bg-blue-900', accent: 'bg-indigo-600', text: 'bg-blue-100' },
+    },
+  },
+  {
+    id: 'modern-education',
+    name: 'Modern Education',
+    style: {
+      backgroundClasses: 'bg-gradient-to-br from-purple-50 via-pink-50 to-white animate-gradient-slow',
+      textColor: 'text-gray-900',
+      headingColor: 'text-purple-900',
+      accentColor: 'text-purple-800',
+      secondaryAccentColor: 'text-pink-700',
+      fontFamily: 'font-sans',
+      preview: { bg: 'bg-purple-900', accent: 'bg-purple-600', text: 'bg-purple-100' },
+    },
+  },
+  {
+    id: 'tech-presentation',
+    name: 'Tech Presentation',
+    style: {
+      backgroundClasses: 'bg-gradient-to-br from-gray-100 via-slate-100 to-white animate-gradient-slow',
+      textColor: 'text-gray-900',
+      headingColor: 'text-gray-900',
+      accentColor: 'text-emerald-700',
+      secondaryAccentColor: 'text-teal-700',
+      fontFamily: 'font-mono',
+      preview: { bg: 'bg-gray-800', accent: 'bg-emerald-600', text: 'bg-gray-200' },
+    },
+  },
+  {
+    id: 'warm-study',
+    name: 'Warm Study',
+    style: {
+      backgroundClasses: 'bg-gradient-to-br from-amber-50 via-yellow-50 to-white animate-gradient-slow',
+      textColor: 'text-gray-900',
+      headingColor: 'text-orange-900',
+      accentColor: 'text-amber-800',
+      secondaryAccentColor: 'text-orange-700',
+      fontFamily: 'font-serif',
+      preview: { bg: 'bg-amber-900', accent: 'bg-amber-600', text: 'bg-amber-100' },
+    },
+  },
+];

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Study Presentation Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Lora:ital,wght@0,400;0,700;1,400&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <style>
+      /* Simple scrollbar styling for a better look */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      .font-serif { font-family: 'Lora', serif; }
+      .font-sans { font-family: 'Inter', sans-serif; }
+      .font-mono { font-family: 'Roboto Mono', monospace; }
+
+      /* Animated Gradient Backgrounds */
+      @keyframes gradient-flow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      
+      @keyframes gradient-flow-slow {
+        0% { background-position: 0% 50%; }
+        33% { background-position: 100% 50%; }
+        66% { background-position: 50% 100%; }
+        100% { background-position: 0% 50%; }
+      }
+      
+      @keyframes floating {
+        0% { transform: translateY(0px) scale(1); }
+        33% { transform: translateY(-10px) scale(1.02); }
+        66% { transform: translateY(5px) scale(0.98); }
+        100% { transform: translateY(0px) scale(1); }
+      }
+      
+      .animate-gradient {
+        background-size: 200% 200%;
+        animation: gradient-flow 15s ease infinite;
+      }
+      
+      .animate-gradient-slow {
+        background-size: 300% 300%;
+        animation: gradient-flow-slow 25s ease infinite;
+      }
+      
+      .animate-float {
+        animation: floating 6s ease-in-out infinite;
+      }
+      
+      /* Enhanced slide transitions */
+      @keyframes slide-in {
+        from { opacity: 0; transform: translateX(30px); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+      
+      @keyframes fade-in-up {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      .animate-slide-in {
+        animation: slide-in 0.6s ease-out;
+      }
+      
+      .animate-fade-in-up {
+        animation: fade-in-up 0.8s ease-out;
+      }
+      
+      /* Subtle shadow effects */
+      .card-shadow {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.06);
+      }
+      
+      .hover-lift {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      
+      .hover-lift:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+      }
+      
+      /* Text readability improvements */
+      .text-readable {
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+      }
+      
+      .text-readable-strong {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
+      
+      .bg-readable {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      
+      .bg-readable-dark {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.16.0",
+    "framer-motion": "https://aistudiocdn.com/framer-motion@^11.3.18"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-gray-100 dark:bg-gray-900">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

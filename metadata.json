@@ -1,0 +1,5 @@
+{
+  "name": "Copy of AI Presentation Generator",
+  "description": "An AI-powered slide generator that uses template presets. The AI generates a structured JSON payload with slide content, layout tokens, and metadata, which is then mapped to template placeholders to produce a presentation, similar to Gamma's workflow.",
+  "requestFramePermissions": []
+}
